@@ -12,10 +12,10 @@ def dump(host: str, port: str, user: str, password: str, backup_file: str):
     command = f"mariadb-dump -h {host} -u {user} -P {port} -p{password} --all-databases > {backup_file}"
     logging.info(command)
     result = subprocess.run(command, shell=True, check=False, text=True, capture_output=True)
-    logging.info(f'Return stream of SQL dump: {result.stderr}')
-    logging.info(f'Return code of SQL dump: {result.returncode}')
-    
+
     if result.returncode != 0:
+        logging.error(f'Return code of SQL dump: {result.returncode}')
+        logging.error(result.stderr)
         raise Exception("dump failed")  
 
 
