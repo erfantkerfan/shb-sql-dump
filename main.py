@@ -39,26 +39,31 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
     load_dotenv()
+
     MAIL_USER = os.getenv('MAIL_USER')
     MAIL_TARGET = os.getenv('MAIL_TARGET')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+
+    MYSQL_HOST = os.getenv('MYSQL_HOST')
+    MYSQL_PORT = os.getenv('MYSQL_PORT')
+    MYSQL_USER = os.getenv('MYSQL_USER')
+    MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
+    MYSQL_DUMP_FILE = os.getenv('MYSQL_DUMP_FILE')
+
+    MINIO_HOST = os.getenv('MINIO_HOST')
+    MINIO_PORT = os.getenv('MINIO_PORT')
+    MINIO_USER = os.getenv('MINIO_USER')
+    MINIO_PASSWORD = os.getenv('MINIO_PASSWORD')
+    MINIO_BUCKET = os.getenv('MINIO_BUCKET')
+    MYSQL_DUMP_FILE = os.getenv('MYSQL_DUMP_FILE')
+
     try:
-        dump(os.getenv('MYSQL_HOST'),   
-                os.getenv('MYSQL_PORT'),
-                os.getenv('MYSQL_USER'),
-                os.getenv('MYSQL_PASSWORD'),
-                os.getenv('MYSQL_DUMP_FILE')
-        )
-        upload_s3(os.getenv('MINIO_HOST'),
-                os.getenv('MINIO_PORT'),
-                os.getenv('MINIO_USER'),
-                os.getenv('MINIO_PASSWORD'),
-                os.getenv('MINIO_BUCKET'),
-                os.getenv('MYSQL_DUMP_FILE')
-        )
+        dump(MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DUMP_FILE)
+        upload_s3(MINIO_HOST, MINIO_PORT, MINIO_USER, MINIO_PASSWORD, MINIO_BUCKET, MYSQL_DUMP_FILE)
     except Exception as e:
-        logging.error(e     )
-        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}', 'sql backup failed!', 'blah blah')
+        logging.error(e)
+        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}', 'SQL Backup FAILED !', f'{e}')
     else:
-        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}', 'sql backup done', 'blah blah')
+        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}', 'SQL Backup DONE', 'Backup was performed without any errors')
