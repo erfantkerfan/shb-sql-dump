@@ -7,7 +7,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import logging
 
-def dump(host: str,port: str, user: str, password: str, backup_file: str):
+
+def dump(host: str, port: str, user: str, password: str, backup_file: str):
     command = f"mariadb-dump -h {host} -u {user} -P {port} -p{password} --all-databases > {backup_file}"
     logging.info(command)
     result = subprocess.run(command, shell=True, check=False, text=True, capture_output=True)
@@ -17,7 +18,8 @@ def dump(host: str,port: str, user: str, password: str, backup_file: str):
     if result.returncode != 0:
         raise Exception("dump failed")  
 
-def upload_s3(host: str, port: str, user: str, password: str,bucket: str, file: str):
+
+def upload_s3(host: str, port: str, user: str, password: str, bucket: str, file: str):
     client = Minio(
         f"{host}:{port}",
         access_key=f"{user}",
@@ -27,6 +29,8 @@ def upload_s3(host: str, port: str, user: str, password: str,bucket: str, file: 
     result = client.fput_object(
         f"{bucket}", f"{file}", f"{file}",
     )
+    return result
+
 
 def send_email(sender_email, sender_password, recipient_email, subject, body):
     message = MIMEMultipart()
@@ -36,6 +40,7 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
     message.attach(MIMEText(body, 'plain'))
     with smtplib.SMTP(os.getenv('MAIL_HOST'), int(os.getenv('MAIL_PORT'))) as server:
         server.send_message(message)
+
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -57,13 +62,15 @@ if __name__ == '__main__':
     MINIO_USER = os.getenv('MINIO_USER')
     MINIO_PASSWORD = os.getenv('MINIO_PASSWORD')
     MINIO_BUCKET = os.getenv('MINIO_BUCKET')
-    MYSQL_DUMP_FILE = os.getenv('MYSQL_DUMP_FILE')
 
     try:
         dump(MYSQL_HOST, MYSQL_PORT, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DUMP_FILE)
         upload_s3(MINIO_HOST, MINIO_PORT, MINIO_USER, MINIO_PASSWORD, MINIO_BUCKET, MYSQL_DUMP_FILE)
     except Exception as e:
         logging.error(e)
-        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}', 'SQL Backup FAILED !', f'{e}')
+        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}',
+                   'SQL Backup FAILED !', f'{e}')
     else:
-        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}', 'SQL Backup DONE', 'Backup was performed without any errors')
+        send_email(f'{MAIL_USER}', f'{MAIL_PASSWORD}', f'{MAIL_TARGET}',
+                   'SQL Backup DONE', 'Backup was performed without any errors')
+    
